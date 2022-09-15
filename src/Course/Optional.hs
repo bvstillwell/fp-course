@@ -19,7 +19,7 @@ data Optional a =
 -- | Return the possible value if it exists; otherwise, the first argument.
 --
 -- >>> fullOr 99 (Full 8)
--- 8
+-- 9
 --
 -- >>> fullOr 99 Empty
 -- 99

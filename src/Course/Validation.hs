@@ -10,6 +10,8 @@ import Course.Core
 -- >>> import Test.QuickCheck
 -- >>> import qualified Prelude as P(fmap, either)
 -- >>> instance Arbitrary a => Arbitrary (Validation a) where arbitrary = P.fmap (P.either Error Value) arbitrary
+-- Could not find module ‘Test.QuickCheck’
+-- Use -v (or `:set -v` in ghci) to see a list of the files searched for.
 data Validation a = Error Err | Value a
   deriving (Eq, Show)
 
@@ -24,6 +26,7 @@ type Err = P.String
 -- False
 --
 -- prop> \x -> isError x /= isValue x
+-- Add QuickCheck to your cabal dependencies to run this test.
 isError :: Validation a -> Bool
 isError (Error _) = True
 isError (Value _) = False

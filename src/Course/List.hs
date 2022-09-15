@@ -28,6 +28,8 @@ import qualified Numeric as N
 -- >>> import Course.Core(even, id, const)
 -- >>> import qualified Prelude as P(fmap, foldr)
 -- >>> instance Arbitrary a => Arbitrary (List a) where arbitrary = P.fmap ((P.foldr (:.) Nil) :: ([a] -> List a)) arbitrary
+-- Could not find module ‘Test.QuickCheck’
+-- Use -v (or `:set -v` in ghci) to see a list of the files searched for.
 
 -- BEGIN Helper functions and data types
 
@@ -70,14 +72,16 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- 3
 --
 -- prop> \x -> x `headOr` infinity == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> x `headOr` Nil == x
+-- Add QuickCheck to your cabal dependencies to run this test.
 headOr ::
   a
   -> List a
   -> a
-headOr =
-  error "todo: Course.List#headOr"
+headOr a Nil = a
+headOr _ (h :. _) = h
 
 -- | The product of the elements of a list.
 --
@@ -92,8 +96,7 @@ headOr =
 product ::
   List Int
   -> Int
-product =
-  error "todo: Course.List#product"
+product = foldRight (*) 1
 
 -- | Sum the elements of the list.
 --
@@ -104,11 +107,11 @@ product =
 -- 10
 --
 -- prop> \x -> foldLeft (-) (sum x) x == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 sum ::
   List Int
   -> Int
-sum =
-  error "todo: Course.List#sum"
+sum = foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -116,11 +119,11 @@ sum =
 -- 3
 --
 -- prop> \x -> sum (map (const 1) x) == length x
+-- Add QuickCheck to your cabal dependencies to run this test.
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length = foldRight (\f b -> b + 1) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -128,14 +131,16 @@ length =
 -- [11,12,13]
 --
 -- prop> \x -> headOr x (map (+1) infinity) == 1
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> map id x == x
+-- Add QuickCheck to your cabal dependencies to run this test.
 map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map _ Nil = Nil
+map f (h :. t) = f h :. map f t
 
 -- | Return elements satisfying the given predicate.
 --
@@ -143,16 +148,19 @@ map =
 -- [2,4]
 --
 -- prop> \x -> headOr x (filter (const True) infinity) == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> filter (const True) x == x
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> filter (const False) x == Nil
+-- Add QuickCheck to your cabal dependencies to run this test.
 filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter _ Nil = Nil
+filter f (h :. t) = if f h then h :. filter f t else filter f t
 
 -- | Append two lists to a new list.
 --
@@ -160,18 +168,23 @@ filter =
 -- [1,2,3,4,5,6]
 --
 -- prop> \x -> headOr x (Nil ++ infinity) == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> headOr x (y ++ infinity) == headOr 0 y
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> (x ++ y) ++ z == x ++ (y ++ z)
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> x ++ Nil == x
+-- Add QuickCheck to your cabal dependencies to run this test.
 (++) ::
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) Nil a = a
+(++) a Nil = a
+(++) (h :. t) b = h :. (t ++ b)
 
 infixr 5 ++
 
@@ -181,15 +194,21 @@ infixr 5 ++
 -- [1,2,3,4,5,6,7,8,9]
 --
 -- prop> \x -> headOr x (flatten (infinity :. y :. Nil)) == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> headOr x (flatten (y :. infinity :. Nil)) == headOr 0 y
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> sum (map length x) == length (flatten x)
+-- Add QuickCheck to your cabal dependencies to run this test.
 flatten ::
   List (List a)
   -> List a
-flatten =
-  error "todo: Course.List#flatten"
+-- flatten Nil = Nil
+-- flatten (a :. Nil) = a
+-- flatten (a :. b :. Nil) = (++) a b
+-- flatten (a :. b :. c) = (++) a (flatten (b :. c))
+flatten = foldLeft (++) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -197,26 +216,31 @@ flatten =
 -- [1,2,3,2,3,4,3,4,5]
 --
 -- prop> \x -> headOr x (flatMap id (infinity :. y :. Nil)) == 0
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> headOr x (flatMap id (y :. infinity :. Nil)) == headOr 0 y
+-- Add QuickCheck to your cabal dependencies to run this test.
 --
 -- prop> \x -> flatMap id (x :: List (List Int)) == flatten x
+-- Add QuickCheck to your cabal dependencies to run this test.
 flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f = foldLeft (\agg item -> (++) agg (f item) ) Nil
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
 --
+-- >>> flattenAgain ((1 :. 2 :. 3 :. Nil) :. (4 :. 5 :. 6 :. Nil) :. (7 :. 8 :. 9 :. Nil) :. Nil)
+-- [1,2,3,4,5,6,7,8,9]
+--
 -- prop> \x -> let types = x :: List (List Int) in flatten x == flattenAgain x
+-- Add QuickCheck to your cabal dependencies to run this test.
 flattenAgain ::
   List (List a)
   -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+flattenAgain = flatMap P.id
 
 -- | Convert a list of optional values to an optional list of values.
 --
