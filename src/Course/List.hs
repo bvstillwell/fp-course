@@ -28,8 +28,6 @@ import qualified Numeric as N
 -- >>> import Course.Core(even, id, const)
 -- >>> import qualified Prelude as P(fmap, foldr)
 -- >>> instance Arbitrary a => Arbitrary (List a) where arbitrary = P.fmap ((P.foldr (:.) Nil) :: ([a] -> List a)) arbitrary
--- Could not find module ‘Test.QuickCheck’
--- Use -v (or `:set -v` in ghci) to see a list of the files searched for.
 
 -- BEGIN Helper functions and data types
 
@@ -72,10 +70,18 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- 3
 --
 -- prop> \x -> x `headOr` infinity == 0
--- Add QuickCheck to your cabal dependencies to run this test.
+-- WAS Add QuickCheck to your cabal dependencies to run this test.
+-- NOW Not in scope: type constructor or class ‘String’
+-- NOW Perhaps you meant one of these:
+-- NOW   ‘P.String’ (imported from Prelude),
+-- NOW   ‘IsString’ (imported from Course.Core)
 --
 -- prop> \x -> x `headOr` Nil == x
--- Add QuickCheck to your cabal dependencies to run this test.
+-- WAS Add QuickCheck to your cabal dependencies to run this test.
+-- NOW Not in scope: type constructor or class ‘String’
+-- NOW Perhaps you meant one of these:
+-- NOW   ‘P.String’ (imported from Prelude),
+-- NOW   ‘IsString’ (imported from Course.Core)
 headOr ::
   a
   -> List a
@@ -251,7 +257,7 @@ flattenAgain = flatMap P.id
 -- then return `Empty`.
 --
 -- >>> seqOptional (Full 1 :. Full 10 :. Nil)
--- Full [1, 10]
+-- Full [1,10]
 --
 -- >>> seqOptional Nil
 -- Full []
@@ -261,11 +267,13 @@ flattenAgain = flatMap P.id
 --
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
-seqOptional ::
-  List (Optional a)
-  -> Optional (List a)
-seqOptional =
-  error "todo: Course.List#seqOptional"
+seqOptional :: List (Optional a) -> Optional (List a)
+seqOptional Nil = Full Nil
+seqOptional (Empty :. _) = Empty
+seqOptional (Full a :. tail) =
+  case seqOptional tail of
+    Empty -> Empty
+    (Full b) -> Full (a :. b)
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -287,8 +295,8 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find _ Nil = Empty
+find f (h :. t) = if f h then Full h else find f t
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -306,25 +314,28 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 (a :. b :. c :. d :. e :. t) = True
+lengthGT4 _ = False
 
 -- | Reverse a list.
 --
 -- >>> reverse Nil
 -- []
 --
+-- >>> reverse (1 :. 2 :. 3 :. 4 :. Nil)
+-- [4,3,2,1]
+--
 -- >>> take 1 (reverse (reverse largeList))
 -- [1]
 --
 -- prop> \x -> let types = x :: List Int in reverse x ++ reverse y == reverse (y ++ x)
+-- Variable not in scope: y :: List Int
+-- Variable not in scope: y :: List Int
 --
 -- prop> \x -> let types = x :: Int in reverse (x :. Nil) == x :. Nil
-reverse ::
-  List a
-  -> List a
-reverse =
-  error "todo: Course.List#reverse"
+-- 
+reverse :: List a -> List a
+reverse = foldLeft (flip (:.)) Nil
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -338,8 +349,7 @@ produce ::
   (a -> a)
   -> a
   -> List a
-produce f x =
-  error "todo: Course.List#produce"
+produce f x = x :. produce f (f x)
 
 -- | Do anything other than reverse a list.
 -- Is it even possible?
@@ -353,8 +363,7 @@ produce f x =
 notReverse ::
   List a
   -> List a
-notReverse =
-  error "todo: Is it even possible?"
+notReverse = reverse
 
 ---- End of list exercises
 
