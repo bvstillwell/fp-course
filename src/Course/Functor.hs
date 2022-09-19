@@ -36,31 +36,32 @@ infixl 4 <$>
 --
 -- >>> (+1) <$> ExactlyOne 2
 -- ExactlyOne 3
+--
 instance Functor ExactlyOne where
   (<$>) ::
     (a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<$>) f (ExactlyOne a)    = ExactlyOne (f a)
-    -- error "todo: Course.Functor (<$>)#instance ExactlyOne"
+  (<$>) f (ExactlyOne a) = ExactlyOne (f a)
+
 
 -- | Maps a function on the List functor.
 --
 -- >>> (+1) <$> Nil
--- []
+-- WAS []
+-- NOW /Users/bstillwell/dev/fp-course/src/Course/Functor.hs:60:3-37: Non-exhaustive patterns in function <$>
 --
 -- >>> (+1) <$> (1 :. 2 :. 3 :. Nil)
--- [2,3,4]
+-- WAS [2,3,4]
+-- NOW /Users/bstillwell/dev/fp-course/src/Course/Functor.hs:60:3-37: Non-exhaustive patterns in function <$>
 instance Functor List where
   (<$>) ::
     (a -> b)
     -> List a
     -> List b
-  -- (<$>) _ Nil  = Nil
-  -- (<$>) f (h :. t) = f h :. (f <$> t)
-  (<$>) f = foldRight  (\ h t -> f h :. t) Nil
-
-    -- error "todo: Course.Functor (<$>)#instance List"
+  (<$>) _ Nil = Nil
+  (<$>) f (h :. t) = f h :. (<$>) f t
+  -- (<$>) = map
 
 -- | Maps a function on the Optional functor.
 --
@@ -80,17 +81,16 @@ instance Functor Optional where
 
 -- | Maps a function on the reader ((->) t) functor.
 --
--- >>> ((+1) <$> (*2)) 8
+--x-- >>> ((+1) <$> (*2)) 8
+-- >>> (<$> (+1) (*2)) 8
 -- 17
 instance Functor ((->) t) where
   (<$>) ::
-    (a -> b)
-    -> (t -> a)
-    -> (t -> b)
-  -- (<$>) f ta t = f (ta t)
-  (<$>) = (.)
-
-    -- error "todo: Course.Functor (<$>)#((->) t)"
+    (a -> b)   -- +1
+    -> ((->) t) a   -- *2
+    -> ((->) t) b
+  (<$>) f t a = f (t a)
+  -- (<$>) = (.)
 
 -- | Anonymous map. Maps a constant value on a functor.
 --
@@ -102,11 +102,11 @@ instance Functor ((->) t) where
 -- prop> \x q -> x <$ Full q == Full x
 (<$) ::
   Functor k =>
-  a
-  -> k b
-  -> k a
-(<$) =
-  error "todo: Course.Functor#(<$)"
+    a
+    -> k b
+    -> k a
+-- (<$) a b = (<$>) (const a) b
+(<$) a = (<$>) (const a)
 
 -- | Apply a value to a functor-of-functions.
 --
@@ -130,8 +130,7 @@ instance Functor ((->) t) where
   k (a -> b)
   -> a
   -> k b
-(??) ff a =
-  error "todo: Course.Functor#(??)"
+(??) ff a = (<$>) (\f -> f a) ff
 
 infixl 1 ??
 
@@ -152,8 +151,7 @@ void ::
   Functor k =>
   k a
   -> k ()
-void =
-  error "todo: Course.Functor#void"
+void = (<$) ()
 
 -----------------------
 -- SUPPORT LIBRARIES --
