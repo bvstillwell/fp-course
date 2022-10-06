@@ -50,16 +50,16 @@ instance Functor ExactlyOne where
 -- >>> (+1) <$> Nil
 -- []
 --
--- >>> (+1) <$> (1 :. 2 :. 3 :. Nil)
+-- >>> (<$>) (+1) (1 :. 2 :. 3 :. Nil)
 -- [2,3,4]
 instance Functor List where
   (<$>) ::
     (a -> b)
     -> List a
     -> List b
-  (<$>) _ Nil = Nil
-  (<$>) f (h :. t) = f h :. (<$>) f t
-  -- (<$>) = map
+  -- (<$>) _ Nil = Nil
+  -- (<$>) f (h :. t) = f h :. (<$>) f t
+  (<$>) f xs = map f xs
 
 -- | Maps a function on the Optional functor.
 --
@@ -83,8 +83,8 @@ instance Functor Optional where
 instance Functor ((->) t) where
   (<$>) ::
     (a -> b)
-    -> ((->) t a)
-    -> ((->) t b)
+    -> (->) t a
+    -> (->) t b
   (<$>) fab fta t = fab (fta t)
   -- (<$>) = (.)
 
