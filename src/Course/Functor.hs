@@ -48,12 +48,10 @@ instance Functor ExactlyOne where
 -- | Maps a function on the List functor.
 --
 -- >>> (+1) <$> Nil
--- WAS []
--- NOW /Users/bstillwell/dev/fp-course/src/Course/Functor.hs:60:3-37: Non-exhaustive patterns in function <$>
+-- []
 --
 -- >>> (+1) <$> (1 :. 2 :. 3 :. Nil)
--- WAS [2,3,4]
--- NOW /Users/bstillwell/dev/fp-course/src/Course/Functor.hs:60:3-37: Non-exhaustive patterns in function <$>
+-- [2,3,4]
 instance Functor List where
   (<$>) ::
     (a -> b)
@@ -77,19 +75,17 @@ instance Functor Optional where
     -> Optional b
   (<$>) _ Empty = Empty
   (<$>) f (Full a) = Full (f a)
-    -- error "todo: Course.Functor (<$>)#instance Optional"
 
 -- | Maps a function on the reader ((->) t) functor.
 --
---x-- >>> ((+1) <$> (*2)) 8
--- >>> (<$> (+1) (*2)) 8
+-- >>> ((+1) <$> (*2)) 8
 -- 17
 instance Functor ((->) t) where
   (<$>) ::
-    (a -> b)   -- +1
-    -> ((->) t) a   -- *2
-    -> ((->) t) b
-  (<$>) f t a = f (t a)
+    (a -> b)
+    -> ((->) t a)
+    -> ((->) t b)
+  (<$>) fab fta t = fab (fta t)
   -- (<$>) = (.)
 
 -- | Anonymous map. Maps a constant value on a functor.
