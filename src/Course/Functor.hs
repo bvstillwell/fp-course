@@ -95,12 +95,13 @@ instance Functor ((->) t) where
 --
 -- prop> \x a b c -> x <$ (a :. b :. c :. Nil) == (x :. x :. x :. Nil)
 --
--- prop> \x q -> x <$ Full q == Full x
+-- prop> \x q ->  (x :: Int) <$ Full (q :: Int) == Full x
 (<$) ::
   Functor k =>
     a
     -> k b
     -> k a
+-- (<$) = \a -> \kb -> (\b -> a) <$> kb
 -- (<$) a b = (<$>) (const a) b
 (<$) a = (<$>) (const a)
 
@@ -126,7 +127,8 @@ instance Functor ((->) t) where
   k (a -> b)
   -> a
   -> k b
-(??) ff a = (<$>) (\f -> f a) ff
+-- (??) ff a =  (\f -> f a) <$> ff
+(??) ff a =  ($ a) <$> ff
 
 infixl 1 ??
 
@@ -147,7 +149,9 @@ void ::
   Functor k =>
   k a
   -> k ()
+-- void a =  (\b -> ()) <$> a
 void = (<$) ()
+-- void = (<$) ()
 
 -----------------------
 -- SUPPORT LIBRARIES --
