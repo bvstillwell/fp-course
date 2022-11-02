@@ -76,9 +76,9 @@ instance Applicative List where
     -> List a
     -> List b
   (<*>) Nil _ = Nil
-  (<*>) (fab :. fabs) la = (fab <$> la) ++ (fabs <*> la)
+  -- (<*>) (fab :. fabs) la = (fab <$> la) ++ (fabs <*> la)
   -- (<*>) Nil _ = Nil
-  -- (<*>) xs ys = flatMap (<$> ys) xs
+  (<*>) xs ys = flatMap (<$> ys) xs
   -- (<*>) (x :. xs) ys = (x <$> ys) ++ (xs <*> ys)
     -- let this = (x <$> ys) in
     --   let next = (xs <*> ys) in
@@ -183,7 +183,7 @@ lift2 ::
   -> k c
 -- lift2 fabc fa fb = pure fabc <*> fa <*> fb
 -- lift2 f a b = f <$> a <*> b
-lift2 abc ka kb = pure abc <*> ka <*> kb
+lift2 abc ka kb = lift1 abc ka <*> kb
   -- error "todo: Course.Applicative#lift2"
 
 -- | Apply a ternary function in the environment.
@@ -274,11 +274,13 @@ lift0 = pure
 -- >>> lift1 (+1) (1 :. 2 :. 3 :. Nil)
 -- [2,3,4]
 lift1 ::
-  Applicative k =>
+  -- Applicative k =>
+  (Functor k, Applicative k) =>
   (a -> b)
   -> k a
   -> k b
-lift1 f ka = lift0 f <*> ka
+-- lift1 f ka = lift0 f <*> ka
+lift1 = (<$>)  -- use functor
   -- error "todo: Course.Applicative#lift1"
 
 -- | Apply, discarding the value of the first argument.
@@ -304,7 +306,9 @@ lift1 f ka = lift0 f <*> ka
   k a
   -> k b
   -> k b
-(*>) = lift2 (flip const)
+-- (*>) = lift2 (\m n -> n)
+(*>) = lift2 (\_ b -> b)
+  -- lift2 (flip const)
 
   -- error "todo: Course.Applicative#(*>)"
 
@@ -354,9 +358,17 @@ sequence ::
   Applicative k =>
   List (k a)
   -> k (List a)
-sequence =
+sequence Nil = pure Nil
+sequence (x:.xs) = lift2 (:.) x (sequence xs)
+-- sequence (x:.xs) = lift2 (++) (lift1 (:. Nil) x) (sequence xs)
+-- sequence (x:.xs) = lift2 (++) ((:. Nil) <$> x) (sequence xs)
+-- sequence (x:.xs) = pure (++) <*> (pure (:. Nil) <*> x) <*> sequence xs
+-- Have an empty list then iterate on the items on the list, lift them to turn them into a list and concat them
+-- sequence = foldLeft (\acc b -> lift2 (++) acc (lift1 (:.Nil) b)) (pure Nil)
+-- sequence (ka :. kas) = lift2 (\a as -> a :. as) ka (sequence kas)
+-- sequence = foldRight (lift2 (:.)) (pure Nil)
 
-  error "todo: Course.Applicative#sequence"
+  -- error "todo: Course.Applicative#sequence"
 
 -- | Replicate an effect a given number of times.
 --
@@ -381,8 +393,12 @@ replicateA ::
   Int
   -> k a
   -> k (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+-- replicateA c k = sequence (replicate c k)
+replicateA c = sequence . replicate c
+-- replicateA c k = lift1 (\a -> replicate c a) k
+-- replicateA c = lift1 (replicate c)
+
+  -- error "todo: Course.Applicative#replicateA"
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -409,8 +425,26 @@ filtering ::
   (a -> k Bool)
   -> List a
   -> k (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering _ Nil = pure Nil
+filtering f (x:.xs) = 
+  -- let next = filtering f xs in
+  -- let allow = f x in 
+  --   let append = lift2 (\b c -> if b then x :. c else c) allow next in
+  --     append
+    
+    lift2 (\test as -> if test then x :. as else as) (f x) (filtering f xs)
+
+  --(<*>) tab ta v = tab v (ta v)
+
+    -- let zs = zip (map fbools xs) xs in
+    --   let start = pure Nil in
+    --     -- foldLeft (\acc (kbool, a) -> lift2 (++) acc (lift1 (\b -> if b then a :. Nil else Nil) kbool)) start zs
+    --     foldLeft (\acc (kbool, a) -> lift2 (\g h -> g ++ (if h then a :. Nil else Nil)) acc kbool) start zs
+      -- let start = pure Nil in
+      --   foldLeft (\acc x -> lift2 (\f g -> if f then g ++ x :. Nil else g ) (fakb x) acc) start xs
+
+
+  -- error "todo: Course.Applicative#filtering"
 
 -----------------------
 -- SUPPORT LIBRARIES --
