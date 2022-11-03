@@ -426,13 +426,11 @@ filtering ::
   -> List a
   -> k (List a)
 filtering _ Nil = pure Nil
-filtering f (x:.xs) = 
+filtering f (x:.xs) = lift2 (\test as -> if test then x :. as else as) (f x) (filtering f xs)
   -- let next = filtering f xs in
   -- let allow = f x in 
   --   let append = lift2 (\b c -> if b then x :. c else c) allow next in
   --     append
-    
-    lift2 (\test as -> if test then x :. as else as) (f x) (filtering f xs)
 
   --(<*>) tab ta v = tab v (ta v)
 
@@ -440,8 +438,8 @@ filtering f (x:.xs) =
     --   let start = pure Nil in
     --     -- foldLeft (\acc (kbool, a) -> lift2 (++) acc (lift1 (\b -> if b then a :. Nil else Nil) kbool)) start zs
     --     foldLeft (\acc (kbool, a) -> lift2 (\g h -> g ++ (if h then a :. Nil else Nil)) acc kbool) start zs
-      -- let start = pure Nil in
-      --   foldLeft (\acc x -> lift2 (\f g -> if f then g ++ x :. Nil else g ) (fakb x) acc) start xs
+-- filtering f (x:.xs) =       
+--         foldLeft (\acc x -> lift2 (\f g -> if f then g ++ x :. Nil else g ) (f x) acc) (pure Nil) xs
 
 
   -- error "todo: Course.Applicative#filtering"
