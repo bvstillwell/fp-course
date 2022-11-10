@@ -36,7 +36,10 @@ instance Monad ExactlyOne where
     (a -> ExactlyOne b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (=<<) f (ExactlyOne a) = f a
+  -- (=<<) f (ExactlyOne a) = f a
+  (=<<) = bindExactlyOne 
+  
+  
     -- error "todo: Course.Monad (=<<)#instance ExactlyOne"
 
 -- | Binds a function on a List.
@@ -50,7 +53,8 @@ instance Monad List where
     -> List b
   -- (=<<) _ Nil = Nil
   -- (=<<) f (a:.as) = f a ++ (f =<< as)
-  (=<<) f as = foldRight (\a b -> f a ++ b) Nil as
+  -- (=<<) f as = foldRight (\a b -> f a ++ b) Nil as
+  (=<<) = flatMap 
 
     -- error "todo: Course.Monad (=<<)#instance List"
 
@@ -63,8 +67,9 @@ instance Monad Optional where
     (a -> Optional b)
     -> Optional a
     -> Optional b
-  (=<<) _ Empty = Empty
-  (=<<) f (Full a) = f a
+  -- (=<<) _ Empty = Empty
+  -- (=<<) f (Full a) = f a
+  (=<<) = bindOptional
     -- error "todo: Course.Monad (=<<)#instance Optional"
 
 -- | Binds a function on the reader ((->) t).
@@ -84,7 +89,8 @@ instance Monad ((->) t) where
   (=<<) ::
     (a -> t -> b)
     -> (t -> a)
-    -> (t -> b)
+    -> t 
+    -> b
   (=<<) fat fa t = fat (fa t) t
 
 
@@ -126,6 +132,8 @@ instance Monad ((->) t) where
   -> k b
 -- (<**>) kf ka = (<*>) kf ka 
 (<**>) = (<*>)
+-- (<**>) kab ka = (\f -> (\a -> pure (f a))  (=<<) ka)    (=<<) kab
+
   -- error "todo: Course.Monad#(<**>)"
 
 infixl 4 <**>
@@ -147,7 +155,7 @@ join ::
   Monad k =>
   k (k a)
   -> k a
--- join f = let m = (=<<) (\g -> g) f in m
+-- join f = (\g -> g) (=<<) f
 join = (=<<) id
 --   error "todo: Course.Monad#join"
 
@@ -162,9 +170,9 @@ join = (=<<) id
   k a
   -> (a -> k b)
   -> k b
--- (>>=) ka f = join (lift1 f ka)
+(>>=) ka akb = join (akb <$> ka)
 -- (>>=) ka f = f =<< ka
-(>>=) ka f = (=<<) f ka
+-- (>>=) ka f = (=<<) f ka
   -- error "todo: Course.Monad#(>>=)"
 
 infixl 1 >>=
@@ -183,6 +191,7 @@ infixl 1 >>=
 -- (<=<) bkc akb a =
 --   let kb = akb a in
 --     let kkc = lift1 bkc kb in join kkc
+-- (<=<) bkc akb a = join (lift1 bkc (akb a))
 (<=<) bkc akb a = join (lift1 bkc (akb a))
   -- error "todo: Course.Monad#(<=<)"
 
