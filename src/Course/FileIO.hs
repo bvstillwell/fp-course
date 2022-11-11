@@ -10,6 +10,8 @@ import Course.Applicative
 import Course.Monad
 import Course.Functor
 import Course.List
+import Ar (ArchiveEntry(filename))
+import Text.Printf (printf)
 
 {-
 
@@ -79,13 +81,19 @@ the contents of c
 
 -}
 
+
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
 printFile ::
   FilePath
   -> Chars
   -> IO ()
+-- printFile filename contents = putStrLn  ("=====" ++ filename) *> putStrLn contents
+-- printFile lift2 
+-- void sequence (putstrln <$> lines)
+
 printFile =
+-- printFile = \name -> \contents -> _todo
   error "todo: Course.FileIO#printFile"
 
 -- Given a list of (file name and file contents), print each.

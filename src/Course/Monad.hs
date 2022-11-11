@@ -37,9 +37,9 @@ instance Monad ExactlyOne where
     -> ExactlyOne a
     -> ExactlyOne b
   -- (=<<) f (ExactlyOne a) = f a
-  (=<<) = bindExactlyOne 
-  
-  
+  (=<<) = bindExactlyOne
+
+
     -- error "todo: Course.Monad (=<<)#instance ExactlyOne"
 
 -- | Binds a function on a List.
@@ -54,7 +54,7 @@ instance Monad List where
   -- (=<<) _ Nil = Nil
   -- (=<<) f (a:.as) = f a ++ (f =<< as)
   -- (=<<) f as = foldRight (\a b -> f a ++ b) Nil as
-  (=<<) = flatMap 
+  (=<<) = flatMap
 
     -- error "todo: Course.Monad (=<<)#instance List"
 
@@ -89,7 +89,7 @@ instance Monad ((->) t) where
   (=<<) ::
     (a -> t -> b)
     -> (t -> a)
-    -> t 
+    -> t
     -> b
   (=<<) fat fa t = fat (fa t) t
 
@@ -131,8 +131,9 @@ instance Monad ((->) t) where
   -> k a
   -> k b
 -- (<**>) kf ka = (<*>) kf ka 
-(<**>) = (<*>)
--- (<**>) kab ka = (\f -> (\a -> pure (f a))  (=<<) ka)    (=<<) kab
+-- (<**>) = (<*>)
+-- (<**>) kab ka = (\f -> (\a -> pure (f a)) =<< ka) =<< kab
+(<**>) kab ka = (\fab -> (pure . fab) =<< ka) =<< kab
 
   -- error "todo: Course.Monad#(<**>)"
 
@@ -155,8 +156,9 @@ join ::
   Monad k =>
   k (k a)
   -> k a
--- join f = (\g -> g) (=<<) f
 join = (=<<) id
+-- join f = (\g -> g) (=<<) f
+-- join = (=<<) id
 --   error "todo: Course.Monad#join"
 
 -- | Implement a flipped version of @(=<<)@, however, use only
@@ -171,6 +173,9 @@ join = (=<<) id
   -> (a -> k b)
   -> k b
 (>>=) ka akb = join (akb <$> ka)
+
+
+-- (>>=) ka akb = join (akb <$> ka)
 -- (>>=) ka f = f =<< ka
 -- (>>=) ka f = (=<<) f ka
   -- error "todo: Course.Monad#(>>=)"
@@ -186,13 +191,13 @@ infixl 1 >>=
   Monad k =>
   (b -> k c)
   -> (a -> k b)
-  -> a
-  -> k c
+  -> a -> k c
+(<=<) fbkc fakb a = fbkc =<< fakb a
 -- (<=<) bkc akb a =
 --   let kb = akb a in
 --     let kkc = lift1 bkc kb in join kkc
 -- (<=<) bkc akb a = join (lift1 bkc (akb a))
-(<=<) bkc akb a = join (lift1 bkc (akb a))
+-- (<=<) bkc akb a = join (lift1 bkc (akb a))
   -- error "todo: Course.Monad#(<=<)"
 
 infixr 1 <=<
