@@ -10,8 +10,6 @@ import Course.Applicative
 import Course.Monad
 import Course.Functor
 import Course.List
-import Ar (ArchiveEntry(filename))
-import Text.Printf (printf)
 
 {-
 
@@ -88,51 +86,71 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
--- printFile filename contents = putStrLn  ("=====" ++ filename) *> putStrLn contents
--- printFile lift2 
--- void sequence (putstrln <$> lines)
+printFile filePath contents =
+  -- let lines = ("============" ++ filePath) :. contents :. Nil in
+  --   let k = putStrLn <$> lines in 
+  --     let p = sequence k in void p
+    -- putStrLn ("============" ++ filePath) <* putStrLn contents
+    putStrLn ("============ " ++ filePath) *> putStrLn contents
 
-printFile =
--- printFile = \name -> \contents -> _todo
-  error "todo: Course.FileIO#printFile"
+-- func
+-- applicitave
+-- monad
+-- error "todo: Course.FileIO#printFile"
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles =
-  error "todo: Course.FileIO#printFiles"
+-- printFiles = foldRight (\fc acc -> acc <* uncurry printFile fc) (pure ())
+printFiles xs = foldRight (<*) (pure ()) (uncurry printFile <$> xs)
+  -- error "todo: Course.FileIO#printFiles"
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile f = lift1 (\c -> (f, c)) (readFile f)
+  -- error "todo: Course.FileIO#getFile"
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+getFiles xs = sequence (getFile <$> xs)
+
+  -- error "todo: Course.FileIO#getFiles"
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@, @lines@, and @printFiles@.
 run ::
   FilePath
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run filePath =
+  -- let theFile = getFile filePath in
+  --   let rawFilesToRead = lines . snd <$> theFile in
+  --     let theFilesAndContents = getFiles =<< (rawFilesToRead  :: IO (List FilePath)) in
+  --       printFiles =<< theFilesAndContents
+  -- let theFile = getFile filePath in
+  --     let rawFilesToRead = lines . snd <$> theFile in
+  --         printFiles =<< getFiles =<< (rawFilesToRead  :: IO (List FilePath))
+      printFiles =<< getFiles . lines . snd =<< getFile filePath
+
+  -- error "todo: Course.FileIO#run"
 
 -- /Tip:/ use @getArgs@ and @run@
-main ::
-  IO ()
+main :: IO ()
 main =
-  error "todo: Course.FileIO#main"
+  -- let runFunc = foldRight (\v acc -> acc <* run v) (pure ()) in
+  --   join (lift1 runFunc getArgs)
+  -- let runFunc = (\a -> void (sequence (run <$> a))) in
+  --   join (lift1 runFunc getArgs)
+     (void . sequence . (<$>) run) =<< getArgs
+
+  -- error "todo: Course.FileIO#main"
 
 ----
 
