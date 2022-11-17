@@ -104,7 +104,9 @@ printFiles ::
   List (FilePath, Chars)
   -> IO ()
 -- printFiles = foldRight (\fc acc -> acc <* uncurry printFile fc) (pure ())
-printFiles xs = foldRight (<*) (pure ()) (uncurry printFile <$> xs)
+-- printFiles xs = foldRight (<*) (pure ()) (uncurry printFile <$> xs)
+-- printFiles xs = void (sequence (uncurry printFile <$> xs))
+printFiles = traverseF_ (uncurry printFile)
   -- error "todo: Course.FileIO#printFiles"
 
 -- Given a file name, return (file name and file contents).
@@ -112,7 +114,8 @@ printFiles xs = foldRight (<*) (pure ()) (uncurry printFile <$> xs)
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile f = lift1 (\c -> (f, c)) (readFile f)
+-- getFile f = lift1 (\c -> (f, c)) (readFile f)
+getFile f = (\c -> (f, c)) <$> readFile f
   -- error "todo: Course.FileIO#getFile"
 
 -- Given a list of file names, return list of (file name and file contents).
@@ -120,7 +123,9 @@ getFile f = lift1 (\c -> (f, c)) (readFile f)
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles xs = sequence (getFile <$> xs)
+-- getFiles xs = sequence (getFile <$> xs)
+getFiles = traverseF getFile
+
 
   -- error "todo: Course.FileIO#getFiles"
 
@@ -137,7 +142,14 @@ run filePath =
   -- let theFile = getFile filePath in
   --     let rawFilesToRead = lines . snd <$> theFile in
   --         printFiles =<< getFiles =<< (rawFilesToRead  :: IO (List FilePath))
-      printFiles =<< getFiles . lines . snd =<< getFile filePath
+      -- printFiles =<< getFiles . lines . snd =<< getFile filePath
+      -- getFile fp >>= (\f -> getFiles( lines (snd f)) )
+      -- printFiles =<< getFiles . lines . snd =<< getFile filePath
+
+      do
+        f <- getFile filePath
+        fs <- getFiles (lines (snd f))
+        printFiles fs
 
   -- error "todo: Course.FileIO#run"
 
@@ -148,7 +160,8 @@ main =
   --   join (lift1 runFunc getArgs)
   -- let runFunc = (\a -> void (sequence (run <$> a))) in
   --   join (lift1 runFunc getArgs)
-     (void . sequence . (<$>) run) =<< getArgs
+    --  (void . sequence . (<$>) run) =<< getArgs
+    traverseF_ run =<< getArgs
 
   -- error "todo: Course.FileIO#main"
 
@@ -158,3 +171,9 @@ main =
 -- ? `sequence . (<$>)`
 -- ? `void . sequence . (<$>)`
 -- Factor it out.
+
+-- BS we did this to refactor our solution
+traverseF f = sequence . (f <$>)
+
+traverseF_ f = void . traverseF f
+
