@@ -21,6 +21,7 @@ import Course.Optional
 import qualified System.Environment as E
 import qualified Prelude as P
 import qualified Numeric as N
+import Prelude(String)
 
 
 -- $setup
@@ -70,18 +71,13 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- 3
 --
 -- prop> \x -> x `headOr` infinity == 0
--- WAS Add QuickCheck to your cabal dependencies to run this test.
--- NOW Not in scope: type constructor or class ‘String’
--- NOW Perhaps you meant one of these:
--- NOW   ‘P.String’ (imported from Prelude),
--- NOW   ‘IsString’ (imported from Course.Core)
+-- Variable not in scope:
+--   propEvaluation :: (Integer -> Bool) -> IO String
+
 --
 -- prop> \x -> x `headOr` Nil == x
--- WAS Add QuickCheck to your cabal dependencies to run this test.
--- NOW Not in scope: type constructor or class ‘String’
--- NOW Perhaps you meant one of these:
--- NOW   ‘P.String’ (imported from Prelude),
--- NOW   ‘IsString’ (imported from Course.Core)
+-- Variable not in scope: propEvaluation :: (a0 -> Bool) -> IO String
+
 headOr ::
   a
   -> List a
