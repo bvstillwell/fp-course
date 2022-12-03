@@ -175,26 +175,38 @@ findM f (h :. t) =  (\g -> if g then pure $ Full h else findM f t ) =<< f h
 -- Full 2
 --
 -- prop> \xs -> case firstRepeat xs of Empty -> let xs' = hlist xs in nub xs' == xs'; Full x -> length (filter (== x) xs) > 1
+-- +++ OK, passed 100 tests.
 -- prop> \xs -> case firstRepeat xs of Empty -> True; Full x -> let (l, (rx :. rs)) = span (/= x) xs in let (l2, r2) = span (/= x) rs in let l3 = hlist (l ++ (rx :. Nil) ++ l2) in nub l3 == l3
+-- +++ OK, passed 100 tests.
 firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat Nil = Empty
+firstRepeat xs = let p = \a ->
+                        (\s -> const (pure (S.member a s)) =<< put (S.insert a s))
+                        =<< get in
+  eval (findM p xs) S.empty
+
+  -- error "todo: Course.State#firstRepeat"
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
 --
 -- prop> \xs -> firstRepeat (distinct xs) == Empty
+-- +++ OK, passed 100 tests.
 --
 -- prop> \xs -> distinct xs == distinct (flatMap (\x -> x :. x :. Nil) xs)
+-- +++ OK, passed 100 tests.
 distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct xs = let p = \a ->
+                        (\s -> const (pure (S.notMember a s)) =<< put (S.insert a s))
+                        =<< get in
+    eval (filtering p xs) S.empty
+  -- error "todo: Course.State#distinct"
 
 -- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
 -- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1

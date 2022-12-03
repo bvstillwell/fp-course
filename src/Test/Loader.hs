@@ -48,7 +48,7 @@ import Test.StateTest (test_State)
 import Test.TraversableTest (test_Traversable)
 import Test.ValidationTest (test_Validation)
 
-import Data.String (fromString)
+import Data.String (fromString, String)
 
 import Test.Framework (TestTree, test, testGroup)
 
