@@ -230,7 +230,9 @@ distinct xs = let p = \a ->
 -- >>> isHappy 44
 -- True
 isHappy ::
-  Integer
+  Int
   -> Bool
-isHappy =
-  error "todo: Course.State#isHappy"
+isHappy = contains 1 . firstRepeat . produce nextHappyNumber
+
+nextHappyNumber :: Int -> Int
+nextHappyNumber x = sum $ map (\b -> let m = digitToInt b in (m * m) ) (show' x)
