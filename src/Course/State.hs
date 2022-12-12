@@ -184,8 +184,10 @@ firstRepeat ::
   -> Optional a
 firstRepeat Nil = Empty
 firstRepeat xs = let p = \a ->
-                        (\s -> const (pure (S.member a s)) =<< put (S.insert a s))
-                        =<< get in
+                        -- (\s -> const (pure (S.member a s)) =<< put (S.insert a s)) =<< get
+                        -- State (\s -> (S.member a s, S.insert a s))
+                        (\s -> S.member a s <$ put (S.insert a s)) =<< get -- Put returns ((), Set), and the <$ modifies the () to be the bool
+                        in
   eval (findM p xs) S.empty
 
   -- error "todo: Course.State#firstRepeat"
@@ -203,8 +205,9 @@ distinct ::
   List a
   -> List a
 distinct xs = let p = \a ->
-                        (\s -> const (pure (S.notMember a s)) =<< put (S.insert a s))
-                        =<< get in
+                        -- (\s -> const (pure (S.notMember a s)) =<< put (S.insert a s))  =<< get 
+                        (\s -> S.notMember a s <$ put (S.insert a s)) =<< get
+                       in
     eval (filtering p xs) S.empty
   -- error "todo: Course.State#distinct"
 
@@ -230,9 +233,11 @@ distinct xs = let p = \a ->
 -- >>> isHappy 44
 -- True
 isHappy ::
-  Int
+  Integer
   -> Bool
-isHappy = contains 1 . firstRepeat . produce nextHappyNumber
+isHappy a = contains 1 . firstRepeat . produce nextHappyNumber $ P.fromIntegral a
 
 nextHappyNumber :: Int -> Int
-nextHappyNumber x = sum $ map (\b -> let m = digitToInt b in (m * m) ) (show' x)
+-- nextHappyNumber x = sum $ map (\b -> let m = digitToInt b in (m * m) ) (show' x)
+nextHappyNumber x = sum (join (*) . digitToInt <$> show' x)
+
